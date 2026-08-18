@@ -10,10 +10,10 @@ const songs = [
   { src: 'music/طويت_يناوي_مع_سايب_ليفانت.mp3', title: 'طويت يناوي مع سايب ليفانت', artist: 'إضافة سابقة', note: 'إضافة جديدة' },
   { src: 'music/أنا_مش_أناني.mp3', title: 'أنا مش أناني', artist: 'إضافة جديدة', note: 'مود عاطفي' },
   { src: 'music/خلصانة_الحكاية.mp3', title: 'خلصانة الحكاية', artist: 'إضافة جديدة', note: 'لوقت الكلام الكتير' },
-  { src: 'music/قولوله_سامح.mp3', title: 'قولوله سامح', artist: 'إضافة جديدة', note: 'مود رومانسي' },
-  { src: 'music/مراية_الحب.mp3', title: 'مراية الحب', artist: 'تامر عاشور', note: 'للمود الرومانسي' },
+  { src: 'music/قولوله_سامح.mp3', title: 'قولوله سامح', artist: 'إضافة جديدة', note: 'مود هادي' },
+  { src: 'music/مراية_الحب.mp3', title: 'مراية الحب', artist: 'تامر عاشور', note: 'للمود الهادي' },
   { src: 'music/سكت_ليه.mp3', title: 'سكت ليه', artist: 'إضافة جديدة', note: 'للوقت اللي فيه كلام كتير' },
-  { src: 'music/بتفتكرني_ساعات.mp3', title: 'بتفتكرني ساعات', artist: 'رامي صبري', note: 'رومانسية على مهل' },
+  { src: 'music/بتفتكرني_ساعات.mp3', title: 'بتفتكرني ساعات', artist: 'رامي صبري', note: 'مود هادي على مهل' },
   { src: 'music/لما_بيوحشني.mp3', title: 'لما بيوحشني', artist: 'رامي صبري', note: 'وقت الحنين' },
   { src: 'music/محبتش.mp3', title: 'محبتش', artist: 'إضافة جديدة', note: 'مزاج هادي' },
   { src: 'music/أنا_بحبك_إنت.mp3', title: 'أنا بحبك إنت', artist: 'رامي صبري', note: 'للقلب على طول' },
@@ -21,7 +21,7 @@ const songs = [
   { src: 'music/بحكيلك_عن_الأيام.mp3', title: 'بحكيلك عن الأيام', artist: 'رامي صبري', note: 'للحكايات القديمة' }
 ];
 const messages = [
-  'يا مي، أنا جنبك طول ما إنتِ عاوزاني… وقت الفرح ووقت اللخبطة ووقت السكوت كمان 🤍',
+  'يا مي، أنا جنبك علطول… وقت الفرح ووقت اللخبطة ووقت السكوت كمان 🤍',
   'إنتِ تستاهلي كل خير، وكل حاجة حلوة جاية ليكي تستحق إنك تستقبليها بقلب مرتاح ✨',
   'إنتِ أَشطر وأحلى مي… ومهما يومك قال عكس كده، ما تصدقيهوش ♥',
   'اللي يخسرك هو الخسران، حتى لو عرف قيمتك بعدين وندم. إنتِ مش محتاجة حد يثبتلك قيمتك.',
@@ -51,7 +51,7 @@ const quotes = [
   '“ممكن يومك يبقى وحش، بس ده مش معناه إنك وحشة أو إن حياتك وحشة.”',
   '“الناس اللي تستاهلك هتفهم قيمتك من غير امتحانات طويلة.”',
   '“كل مرة تختاري فيها نفسك، إنتِ بتقربي من النسخة اللي تستاهل الراحة.”',
-  '“أنا جنبك طول ما إنتِ عاوزاني. دي مش جملة وقتية، دي جملة ثابتة.”'
+  '“أنا جنبك علطول. دي مش جملة وقتية، دي جملة ثابتة.”'
 ];
 
 const $ = (id) => document.getElementById(id);
@@ -109,14 +109,21 @@ function renderPlaylist(){
 }
 function playSong(index){
   const s = songs[index];
+  if (!s) return;
+
   activeIndex = index;
   renderPlaylist();
 
-  // لا يتم تحميل أي ملف صوتي عند فتح الصفحة.
-  // أول ضغطة على الأغنية فقط هي التي تطلب الملف من الخادم وتبدأ التشغيل.
+  // حمّل الأغنية عند الضغط فقط، ثم شغّلها مباشرة من نفس ضغطة المستخدم.
   audio.pause();
   audio.preload = 'auto';
-  audio.src = encodeURI(s.src);
+  audio.removeAttribute('src');
+  audio.load();
+
+  const src = new URL(s.src, document.baseURI).href;
+  audio.src = src;
+  audio.load();
+
   $('nowPlaying').textContent = s.title;
   $('nowArtist').textContent = s.artist;
   $('sideSong').textContent = s.title;
@@ -127,7 +134,20 @@ function playSong(index){
     playPromise.catch(() => toastMsg('اضغطي تشغيل من المشغل لو المتصفح منع التشغيل تلقائيًا.'));
   }
 }
+
 renderPlaylist();
+audio.addEventListener('error',()=>{
+  const err = audio.error;
+  console.error('Audio error:', err);
+  toastMsg('الأغنية مش متاحة من مكان الملفات الحالي. جرّبي الملف مرة تانية بعد رفع مجلد music كامل.');
+});
+audio.addEventListener('loadedmetadata',()=>{
+  if (activeIndex >= 0) {
+    const s = songs[activeIndex];
+    $('nowPlaying').textContent = s.title;
+    $('nowArtist').textContent = s.artist;
+  }
+});
 audio.addEventListener('ended',()=>{ if(activeIndex < songs.length-1) playSong(activeIndex+1); });
 $('randomSongBtn').addEventListener('click',()=>playSong(Math.floor(Math.random()*songs.length)));
 $('scrollMusic').addEventListener('click',()=>document.querySelector('#music').scrollIntoView({behavior:'smooth'}));
