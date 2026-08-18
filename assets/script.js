@@ -59,6 +59,8 @@ const loginScreen = $('loginScreen');
 const mainScreen = $('mainScreen');
 const toast = $('toast');
 const audio = $('audioPlayer');
+audio.preload = 'none';
+
 const playlist = $('playlist');
 let activeIndex = -1;
 let messageTimer = null;
@@ -106,11 +108,24 @@ function renderPlaylist(){
   playlist.querySelectorAll('.song').forEach(btn=>btn.addEventListener('click',()=>playSong(Number(btn.dataset.index))));
 }
 function playSong(index){
-  const s = songs[index]; activeIndex=index; renderPlaylist();
+  const s = songs[index];
+  activeIndex = index;
+  renderPlaylist();
+
+  // لا يتم تحميل أي ملف صوتي عند فتح الصفحة.
+  // أول ضغطة على الأغنية فقط هي التي تطلب الملف من الخادم وتبدأ التشغيل.
+  audio.pause();
+  audio.preload = 'auto';
   audio.src = encodeURI(s.src);
-  $('nowPlaying').textContent=s.title; $('nowArtist').textContent=s.artist;
-  $('sideSong').textContent=s.title; $('sideArtist').textContent=s.artist;
-  audio.play().catch(()=>toastMsg('اضغطي تشغيل من المشغل لو المتصفح منع التشغيل التلقائي.'));
+  $('nowPlaying').textContent = s.title;
+  $('nowArtist').textContent = s.artist;
+  $('sideSong').textContent = s.title;
+  $('sideArtist').textContent = s.artist;
+
+  const playPromise = audio.play();
+  if (playPromise && typeof playPromise.catch === 'function') {
+    playPromise.catch(() => toastMsg('اضغطي تشغيل من المشغل لو المتصفح منع التشغيل تلقائيًا.'));
+  }
 }
 renderPlaylist();
 audio.addEventListener('ended',()=>{ if(activeIndex < songs.length-1) playSong(activeIndex+1); });
