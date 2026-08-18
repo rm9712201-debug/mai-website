@@ -76,7 +76,6 @@ function enter(){
   $('username').value = 'mai';
   $('password').value = '';
   $('loginError').textContent = '';
-  spawnHearts(9, true);
   toastMsg('أهلاً يا مي… مكانك مفتوح 🤍');
 }
 function leave(){
@@ -98,7 +97,7 @@ $('loginForm').addEventListener('submit', (e)=>{
   e.preventDefault();
   const u = $('username').value.trim(); const p = $('password').value;
   if(u === LOGIN.username && p === LOGIN.password) enter();
-  else { $('loginError').textContent='اسم المستخدم أو كلمة المرور مش صح.'; spawnHearts(2, false); }
+  else { $('loginError').textContent='اسم المستخدم أو كلمة المرور مش صح.'; }
 });
 $('logoutBtn').addEventListener('click', leave);
 
@@ -111,7 +110,6 @@ function playSong(index){
   audio.src = encodeURI(s.src);
   $('nowPlaying').textContent=s.title; $('nowArtist').textContent=s.artist;
   $('sideSong').textContent=s.title; $('sideArtist').textContent=s.artist;
-  spawnHearts(5, true);
   audio.play().catch(()=>toastMsg('اضغطي تشغيل من المشغل لو المتصفح منع التشغيل التلقائي.'));
 }
 renderPlaylist();
@@ -120,7 +118,7 @@ $('randomSongBtn').addEventListener('click',()=>playSong(Math.floor(Math.random(
 $('scrollMusic').addEventListener('click',()=>document.querySelector('#music').scrollIntoView({behavior:'smooth'}));
 $('messageBtn').addEventListener('click',()=>{
   const msg = messages[Math.floor(Math.random()*messages.length)];
-  toastMsg(msg); spawnHearts(7, true);
+  toastMsg(msg);
 });
 $('letterBtn').addEventListener('click',()=>{
   const l = letters[Math.floor(Math.random()*letters.length)];
@@ -129,41 +127,9 @@ $('letterBtn').addEventListener('click',()=>{
   $('letterSign').textContent = l.sign;
   $('quoteText').textContent = quotes[Math.floor(Math.random()*quotes.length)];
   toastMsg('رسالة جديدة وصلت ليكي 💌');
-  spawnHearts(10, true);
+
 });
-$('moodBtn').addEventListener('click',()=>{ toastMsg(messages[Math.floor(Math.random()*messages.length)]); spawnHearts(8,true); });
-
-function spawnHearts(count=6, pink=true){
-  const field = $('heartField');
-  for(let i=0;i<count;i++){
-    const h=document.createElement('span');
-    h.className='floating-heart';
-    h.textContent=Math.random()>.3?'♥':'✦';
-    h.style.left = `${8+Math.random()*84}%`;
-    h.style.fontSize = `${12+Math.random()*22}px`;
-    h.style.animationDuration = `${2.8+Math.random()*2.5}s`;
-    h.style.setProperty('--drift', `${-80+Math.random()*160}px`);
-    h.style.opacity = `${0.55+Math.random()*.4}`;
-    if(!pink) h.style.filter='grayscale(.15)';
-    field.appendChild(h);
-    h.addEventListener('animationend',()=>h.remove());
-  }
-}
-
-// Lightweight 3D tilt that respects reduced-motion preferences.
-if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-  document.querySelectorAll('.tilt-card').forEach(card=>{
-    card.addEventListener('pointermove', e=>{
-      const r=card.getBoundingClientRect();
-      const x=(e.clientX-r.left)/r.width-.5;
-      const y=(e.clientY-r.top)/r.height-.5;
-      card.style.setProperty('--rx', `${(-y*3).toFixed(2)}deg`);
-      card.style.setProperty('--ry', `${(x*4).toFixed(2)}deg`);
-    });
-    card.addEventListener('pointerleave',()=>{card.style.setProperty('--rx','0deg');card.style.setProperty('--ry','0deg');});
-  });
-  messageTimer = setInterval(()=>{ if(!mainScreen.classList.contains('hidden')) spawnHearts(1, true); }, 1700);
-}
+$('moodBtn').addEventListener('click',()=>{ toastMsg(messages[Math.floor(Math.random()*messages.length)]); });
 
 document.querySelectorAll('.gallery img').forEach(img=>img.addEventListener('click',()=>{ $('lightboxImg').src=img.src; $('lightbox').classList.remove('hidden'); }));
 $('closeLightbox').addEventListener('click',()=>$('lightbox').classList.add('hidden'));
